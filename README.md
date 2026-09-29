@@ -1,0 +1,1 @@
+# mhw-mod-manager-release
