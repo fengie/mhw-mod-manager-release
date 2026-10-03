@@ -1,4 +1,26 @@
 {
-  "schema_version": 1,
-  "releases": []
+    "schema_version":  1,
+    "releases":  [
+                     {
+                         "version":  "8.8.88",
+                         "build":  458,
+                         "source_repository":  "fengie/mhw-mods",
+                         "source_sha":  "d0816f3c495ff055df517ce0b021e41dd19596f6",
+                         "tag":  "updater-main-458",
+                         "channel":  "stable",
+                         "published_at_utc":  "2026-10-03T18:26:17Z",
+                         "artifacts":  [
+                                           {
+                                               "name":  "MHW-Manual-Mod-Manager-v8.8.88-win-x64.zip",
+                                               "size_bytes":  145483084,
+                                               "sha256":  "90f8c136bb1703c8757fde8cc9b9716b88900688bb4b4ada2295a28080d31df1"
+                                           },
+                                           {
+                                               "name":  "update-manifest.json",
+                                               "size_bytes":  610,
+                                               "sha256":  "4802ae8b719b657769df84efb5d02867c3cfe0e67fab6476430f2165489e5fd7"
+                                           }
+                                       ]
+                     }
+                 ]
 }
