@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/fengie/mhw-mod-manager-release/blob/main/schemas/release-provenance.schema.json",
+  "title": "MHW Manual Mod Manager public release provenance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "releases"],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "releases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "build",
+          "source_repository",
+          "source_sha",
+          "tag",
+          "channel",
+          "published_at_utc",
+          "artifacts"
+        ],
+        "properties": {
+          "version": {
+            "type": "string",
+            "pattern": "^[0-9]+(?:\\.[0-9]+){2,3}(?:[-+][0-9A-Za-z.-]+)?$"
+          },
+          "build": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "source_repository": {
+            "const": "fengie/mhw-mods"
+          },
+          "source_sha": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          },
+          "tag": {
+            "type": "string",
+            "minLength": 1
+          },
+          "channel": {
+            "enum": ["stable", "beta", "preview", "internal"]
+          },
+          "published_at_utc": {
+            "type": "string",
+            "pattern": "Z$"
+          },
+          "artifacts": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "size_bytes", "sha256"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^/\\\\]+$"
+                },
+                "size_bytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "signed_metadata_key_id": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
