@@ -1,0 +1,31 @@
+name: Release Repository Policy
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run policy tests
+        run: python -m unittest discover -s tests -v
+      - name: Validate current tree
+        run: python scripts/verify_release_repo.py
+      - name: Enforce append-only provenance
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch --no-tags origin "${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}"
+          python scripts/verify_release_repo.py --base-ref "origin/${{ github.base_ref }}"
