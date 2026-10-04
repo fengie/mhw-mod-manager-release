@@ -105,6 +105,27 @@
                                                "sha256":  "afd9db12be31274e58074fc253bc7eb49cbd337240a5f3e29bd1128a1392e1be"
                                            }
                                        ]
+                     },
+                     {
+                         "version":  "8.8.95",
+                         "build":  478,
+                         "source_repository":  "fengie/mhw-mods",
+                         "source_sha":  "abc7f64b68849e467b0316daef6aab0306682775",
+                         "tag":  "updater-main-478",
+                         "channel":  "stable",
+                         "published_at_utc":  "2026-10-04T21:46:23Z",
+                         "artifacts":  [
+                                           {
+                                               "name":  "MHW-Manual-Mod-Manager-v8.8.95-win-x64.zip",
+                                               "size_bytes":  145600764,
+                                               "sha256":  "c8997828a2bb638fe252f79ad8c4c522d5bb6efda2b2bb00f216fdf7b3d85244"
+                                           },
+                                           {
+                                               "name":  "update-manifest.json",
+                                               "size_bytes":  610,
+                                               "sha256":  "da05961ddeee2ab0aa69936f5ec769b871457ca6396a78ce9c75dd65f536bfc5"
+                                           }
+                                       ]
                      }
                  ]
 }
