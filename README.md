@@ -1,6 +1,6 @@
 # mhw-mod-manager-release
 
-> ⏱️ Last README update: `2026-10-05T22:11:00Z` _(auto-maintained)_
+> ⏱️ Last README update: `2026-10-05T22:15:24Z` _(auto-maintained)_
 
 Public release metadata/provenance surface for **MHW Manual Mod Manager**.
 
