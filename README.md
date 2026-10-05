@@ -1,5 +1,7 @@
 # mhw-mod-manager-release
 
+> ⏱️ Last README update: `2026-10-05T22:11:00Z` _(auto-maintained)_
+
 Public release metadata/provenance surface for **MHW Manual Mod Manager**.
 
 Canonical product source is private and lives in `fengie/mhw-mods`. This repository is not a second product source tree.
