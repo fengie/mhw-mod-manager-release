@@ -1,0 +1,115 @@
+name: README timestamp
+
+on:
+  pull_request:
+    paths:
+      - README.md
+      - '.github/workflows/readme-timestamp.yml'
+      - release-index.json
+      - VERSION_TIMESTAMPS.md
+  push:
+    branches:
+      - main
+    paths:
+      - README.md
+      - '.github/workflows/readme-timestamp.yml'
+      - release-index.json
+      - VERSION_TIMESTAMPS.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: readme-timestamp-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  readme-timestamp:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Validate README timestamp
+        shell: bash
+        run: |
+          set -euo pipefail
+          pattern='^> ⏱️ Last README update: \*\*[A-Z][a-z]+ [0-9]{1,2}, [0-9]{4} · [0-9]{1,2}:[0-9]{2}:[0-9]{2} (AM|PM) E(D|S)T\*\* _\(repo-enforced\)_$'
+
+          if [[ ! -f README.md ]]; then
+            if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+              exit 0
+            fi
+            echo "::error::README.md is missing."
+            exit 1
+          fi
+
+          current="$(grep -m1 -E "$pattern" README.md || true)"
+          [[ -n "$current" ]] || { echo "::error::README.md must contain the readable repo-enforced America/New_York timestamp line."; exit 1; }
+
+          readme_changed=false
+          previous=""
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            git fetch origin "${{ github.base_ref }}" --depth=1
+            if ! git diff --quiet "origin/${{ github.base_ref }}"...HEAD -- README.md; then
+              readme_changed=true
+            fi
+            previous="$(git show "origin/${{ github.base_ref }}:README.md" 2>/dev/null | grep -m1 -E "$pattern" || true)"
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            if git rev-parse HEAD^ >/dev/null 2>&1 && ! git diff --quiet HEAD^ HEAD -- README.md; then
+              readme_changed=true
+            fi
+            previous="$(git show HEAD^:README.md 2>/dev/null | grep -m1 -E "$pattern" || true)"
+          fi
+
+          if [[ "$readme_changed" == "true" && -n "$previous" && "$current" == "$previous" ]]; then
+            echo "::error::README.md changed without refreshing its Last README update timestamp."
+            exit 1
+          fi
+
+- name: Validate public release timestamp ledger
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from datetime import datetime
+          from pathlib import Path
+          from zoneinfo import ZoneInfo
+
+          index = json.loads(Path("release-index.json").read_text(encoding="utf-8"))
+          rows = index if isinstance(index, list) else index.get("releases", index.get("entries", []))
+          ledger = Path("VERSION_TIMESTAMPS.md").read_text(encoding="utf-8")
+
+          def human(iso):
+              dt = datetime.fromisoformat(iso.replace("Z", "+00:00")).astimezone(ZoneInfo("America/New_York"))
+              hour = dt.strftime("%I").lstrip("0") or "0"
+              return f"{dt.strftime('%B')} {dt.day}, {dt.year} · {hour}:{dt.strftime('%M:%S %p %Z')}"
+
+          missing = []
+          for row in rows:
+              expected = f"| {row['version']} | {human(row['published_at_utc'])} | {row['build']} | {row['tag']} |"
+              if expected not in ledger:
+                  missing.append(expected)
+          if missing:
+              raise SystemExit("VERSION_TIMESTAMPS.md is stale or incomplete:\n" + "\n".join(missing))
+          PY
+
+          index_changed=false
+          ledger_changed=false
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            git diff --quiet "origin/${{ github.base_ref }}"...HEAD -- release-index.json || index_changed=true
+            git diff --quiet "origin/${{ github.base_ref }}"...HEAD -- VERSION_TIMESTAMPS.md || ledger_changed=true
+          elif [[ "${{ github.event_name }}" == "push" ]] && git rev-parse HEAD^ >/dev/null 2>&1; then
+            git diff --quiet HEAD^ HEAD -- release-index.json || index_changed=true
+            git diff --quiet HEAD^ HEAD -- VERSION_TIMESTAMPS.md || ledger_changed=true
+          fi
+          if [[ "$index_changed" == "true" && "$ledger_changed" != "true" ]]; then
+            echo "::error::release-index.json changed without updating VERSION_TIMESTAMPS.md in the same change."
+            exit 1
+          fi

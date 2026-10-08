@@ -1,0 +1,20 @@
+{
+  "schema": "heaven-toolbox/update-policy/v1",
+  "repository": "fengie/mhw-mod-manager-release",
+  "branch": "main",
+  "kind": "release-channel",
+  "source_update": {
+    "required": true,
+    "strategy": "ff-only",
+    "poll_interval_minutes": 1,
+    "controller": "heaven-toolbox/repo-autoupdate"
+  },
+  "runtime_update": {
+    "mode": "release-channel",
+    "evidence_paths": [
+      "RELEASE_CONTRACT.md",
+      "release-index.json",
+      ".github/workflows/release-repo-policy.yml"
+    ]
+  }
+}

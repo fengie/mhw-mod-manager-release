@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import copy
+import json
 import unittest
+from unittest import mock
 
-from scripts.verify_release_repo import PolicyError, _validate_index
+from scripts.verify_release_repo import PolicyError, _validate_index, _verify_append_only
 
 
 VALID_RELEASE = {
@@ -46,6 +48,48 @@ class ReleasePolicyTests(unittest.TestCase):
                 "schema_version": 1,
                 "releases": [VALID_RELEASE, copy.deepcopy(VALID_RELEASE)],
             })
+
+
+
+class ReleaseAppendOnlyTests(unittest.TestCase):
+    def check_against_original(self, original: dict, candidate: dict) -> None:
+        # The PR validator reads the trusted base index with git show.
+        with mock.patch(
+            "scripts.verify_release_repo._git",
+            return_value=json.dumps(original),
+        ) as git:
+            _verify_append_only("origin/main", candidate)
+            git.assert_called_once_with("show", "origin/main:release-index.json")
+
+    def test_unchanged_existing_record_is_allowed(self) -> None:
+        original = {"schema_version": 1, "releases": [copy.deepcopy(VALID_RELEASE)]}
+        self.check_against_original(original, copy.deepcopy(original))
+
+    def test_append_new_release_preserves_existing_record(self) -> None:
+        original = {"schema_version": 1, "releases": [copy.deepcopy(VALID_RELEASE)]}
+        extra = copy.deepcopy(VALID_RELEASE)
+        extra.update(
+            version="8.8.86",
+            build=384,
+            source_sha="c" * 40,
+            tag="v8.8.86",
+            published_at_utc="2026-10-04T13:00:00Z",
+        )
+        candidate = {"schema_version": 1, "releases": [copy.deepcopy(VALID_RELEASE), extra]}
+        self.check_against_original(original, candidate)
+
+    def test_modify_published_artifact_digest_fails_closed(self) -> None:
+        original = {"schema_version": 1, "releases": [copy.deepcopy(VALID_RELEASE)]}
+        changed = copy.deepcopy(original)
+        changed["releases"][0]["artifacts"][0]["sha256"] = "d" * 64
+        with self.assertRaisesRegex(PolicyError, "immutable release record modified"):
+            self.check_against_original(original, changed)
+
+    def test_remove_published_record_fails_closed(self) -> None:
+        original = {"schema_version": 1, "releases": [copy.deepcopy(VALID_RELEASE)]}
+        changed = {"schema_version": 1, "releases": []}
+        with self.assertRaisesRegex(PolicyError, "immutable release record removed"):
+            self.check_against_original(original, changed)
 
 
 if __name__ == "__main__":
