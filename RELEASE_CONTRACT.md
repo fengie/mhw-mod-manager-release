@@ -15,7 +15,7 @@ Release executables, installers, archives, and libraries are published as immuta
 - exact `fengie/mhw-mods` source SHA;
 - product version and updater/build number;
 - immutable release tag and channel;
-- UTC publication timestamp;
+- UTC publication timestamp (real calendar date and time in ISO 8601 format, seconds required, optional 1–6 fractional digits, literal `Z` suffix; malformed or nonexistent times fail closed);
 - every published artifact filename, byte size, and SHA-256;
 - optional public signing-metadata key identity when independent updater signing is enabled.
 
