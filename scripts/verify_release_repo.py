@@ -5,6 +5,7 @@ import json
 import re
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -12,6 +13,9 @@ INDEX_PATH = Path("release-index.json")
 MAX_TRACKED_FILE_BYTES = 2 * 1024 * 1024
 SHA40 = re.compile(r"^[0-9a-f]{40}$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
+UTC_TIMESTAMP = re.compile(
+    r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]{1,6})?Z$"
+)
 VERSION = re.compile(r"^[0-9]+(?:\.[0-9]+){2,3}(?:[-+][0-9A-Za-z.-]+)?$")
 FORBIDDEN_PRODUCT_SUFFIXES = {
     ".cs", ".xaml", ".csproj", ".sln", ".vcxproj", ".exe", ".dll", ".msi", ".zip"
@@ -111,8 +115,13 @@ def _validate_release(release: Any, index: int) -> str:
         raise PolicyError(f"{source}: tag must be nonblank")
     if release["channel"] not in ALLOWED_CHANNELS:
         raise PolicyError(f"{source}: unsupported channel {release['channel']!r}")
-    if not isinstance(release["published_at_utc"], str) or not release["published_at_utc"].endswith("Z"):
-        raise PolicyError(f"{source}: published_at_utc must be a UTC timestamp ending in Z")
+    published = release["published_at_utc"]
+    if not isinstance(published, str) or not UTC_TIMESTAMP.fullmatch(published):
+        raise PolicyError(f"{source}: published_at_utc must be an ISO 8601 UTC timestamp ending in Z")
+    try:
+        datetime.fromisoformat(published.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise PolicyError(f"{source}: published_at_utc is not a valid calendar timestamp") from exc
     artifacts = release["artifacts"]
     if not isinstance(artifacts, list) or not artifacts:
         raise PolicyError(f"{source}: artifacts must be a non-empty array")

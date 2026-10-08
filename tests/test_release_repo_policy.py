@@ -27,6 +27,29 @@ VALID_RELEASE = {
 
 
 class ReleasePolicyTests(unittest.TestCase):
+    def test_fractional_utc_timestamp_is_accepted(self) -> None:
+        release = copy.deepcopy(VALID_RELEASE)
+        release["published_at_utc"] = "2026-10-03T13:00:00.123456Z"
+        _validate_index({"schema_version": 1, "releases": [release]})
+
+    def test_malformed_or_nonexistent_publication_timestamps_are_rejected(self) -> None:
+        invalid = (
+            "not-a-dateZ",
+            "2026-02-30T13:00:00Z",
+            "2026-10-03T25:00:00Z",
+            "2026-10-03T13:60:00Z",
+            "2026-10-03T13:00:00+00:00",
+            "2026-10-03T13:00Z",
+            "2026-10-03T13:00:00.1234567Z",
+            "2026-10-03T13:00:00Z ",
+        )
+        for timestamp in invalid:
+            with self.subTest(timestamp=timestamp):
+                release = copy.deepcopy(VALID_RELEASE)
+                release["published_at_utc"] = timestamp
+                with self.assertRaises(PolicyError):
+                    _validate_index({"schema_version": 1, "releases": [release]})
+
     def test_valid_release_is_accepted(self) -> None:
         _validate_index({"schema_version": 1, "releases": [VALID_RELEASE]})
 
