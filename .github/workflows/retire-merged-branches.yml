@@ -1,0 +1,90 @@
+# Only canonical main may execute this cleanup; no PR-head code or checkout.
+name: Retire Exact-Head Merged Branches
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: verified-merged-branch-retirement
+  cancel-in-progress: false
+
+jobs:
+  retire:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Delete only exact-head, main-ancestor, merged PR branches
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const mainSha = context.sha;
+            const preserved = [];
+            const deleted = [];
+            // A main push from a merged PR has the same exact merge SHA.
+            // Never infer integration from a closed-but-unmerged PR or an old SHA.
+            const merged = await github.paginate(github.rest.pulls.list, {
+              owner, repo, state: "closed", base: "main", per_page: 100
+            });
+            const candidates = merged.filter(pr =>
+              pr.merged_at &&
+              pr.merge_commit_sha === mainSha &&
+              pr.head?.repo?.full_name === `${owner}/${repo}` &&
+              pr.head.ref && pr.head.ref !== "main"
+            );
+            for (const pr of candidates) {
+              const name = pr.head.ref;
+              const expected = pr.head.sha;
+              try {
+                const currentMain = await github.rest.git.getRef({ owner, repo, ref: "heads/main" });
+                if (currentMain.data.object.sha !== mainSha) {
+                  preserved.push({ name, reason: "main-advanced" });
+                  break;
+                }
+                const live = await github.rest.git.getRef({ owner, repo, ref: `heads/${name}` });
+                if (live.data.object.sha !== expected) {
+                  preserved.push({ name, reason: "branch-moved-after-merge" });
+                  continue;
+                }
+                const open = await github.rest.pulls.list({
+                  owner, repo, head: `${owner}:${name}`, state: "open", per_page: 1
+                });
+                if (open.data.length) {
+                  preserved.push({ name, reason: "another-open-pr" });
+                  continue;
+                }
+                const ancestry = await github.rest.repos.compareCommitsWithBasehead({
+                  owner, repo, basehead: `${expected}...${mainSha}`
+                });
+                if (ancestry.data.behind_by !== 0) {
+                  preserved.push({ name, reason: "head-not-ancestor-of-main" });
+                  continue;
+                }
+                // Recheck SHA immediately before deletion to reduce takeover races.
+                const latest = await github.rest.git.getRef({ owner, repo, ref: `heads/${name}` });
+                if (latest.data.object.sha !== expected) {
+                  preserved.push({ name, reason: "head-moved-during-check" });
+                  continue;
+                }
+                await github.rest.git.deleteRef({ owner, repo, ref: `heads/${name}` });
+                deleted.push({ name, sha: expected, pr: pr.number });
+              } catch (error) {
+                if (error.status === 404) {
+                  preserved.push({ name, reason: "already-deleted" });
+                  continue;
+                }
+                throw error;
+              }
+            }
+            await core.summary.addHeading("Verified merged branch retirement")
+              .addCodeBlock(JSON.stringify({
+                mainSha, candidates: candidates.length, deleted, preserved
+              }, null, 2), "json")
+              .write();
