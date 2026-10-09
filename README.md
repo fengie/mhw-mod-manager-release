@@ -1,5 +1,7 @@
 # Heaven Toolbox — public release channel
 
+> ⏱️ Last README update: **October 9, 2026 · 6:45:59 PM EDT** _(repo-enforced)_
+
 > Identity repaired October 9, 2026 (America/New_York). Repository `fengie/heaven-toolbox-release` was renamed from `fengie/mhw-mod-manager-release`; **renaming did not publish Toolbox binaries**.
 
 ## Current release status
