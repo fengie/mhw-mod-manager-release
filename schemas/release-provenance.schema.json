@@ -1,10 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/fengie/mhw-mod-manager-release/blob/main/schemas/release-provenance.schema.json",
-  "title": "MHW Manual Mod Manager public release provenance",
+  "$id": "https://github.com/fengie/heaven-toolbox-release/blob/main/schemas/release-provenance.schema.json",
+  "title": "Legacy MHW archive release provenance (immutable historical channel)",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "releases"],
+  "required": [
+    "schema_version",
+    "releases"
+  ],
   "properties": {
     "schema_version": {
       "const": 1
@@ -45,7 +48,12 @@
             "minLength": 1
           },
           "channel": {
-            "enum": ["stable", "beta", "preview", "internal"]
+            "enum": [
+              "stable",
+              "beta",
+              "preview",
+              "internal"
+            ]
           },
           "published_at_utc": {
             "type": "string",
@@ -57,7 +65,11 @@
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["name", "size_bytes", "sha256"],
+              "required": [
+                "name",
+                "size_bytes",
+                "sha256"
+              ],
               "properties": {
                 "name": {
                   "type": "string",

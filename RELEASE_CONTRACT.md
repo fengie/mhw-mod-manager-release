@@ -1,61 +1,25 @@
-# Release Publication Contract
+# Public release contract — legacy MHW archive and proposed Toolbox product
 
-`fengie/mhw-mod-manager-release` is a public metadata/provenance surface for releases produced from the private canonical product repository `fengie/mhw-mods`.
+**Owner:** `fengie/heaven-toolbox-release`. It retains the original `fengie/mhw-mod-manager-release` repository ID and GitHub Release assets.
 
-## Source of truth
+## What is actually published
 
-Product code, tests, updater logic, version decisions, and release orchestration remain in `fengie/mhw-mods`. This repository must not contain a second copy of product source or be used to reconstruct unpublished private implementation.
+Historical `release-index.json` is immutable schema v1 for MHW builds from former `fengie/mhw-mods` source. All source SHAs, timestamps, version/build/tag/channel, artifact filenames, sizes and SHA-256 digests remain EXACT. The source was later renamed `fengie/Heaven-Mod_Manager`, but the original literal identity must not be falsified in the historic records. Existing MHW updater URLs that GitHub redirects **must be end-to-end tested against installed clients**, not assumed safe by source inspection.
 
-Tracked Git content here is limited to release-policy documentation, schemas, bounded verification/publication tooling, CI, and machine-readable provenance.
+No new Heaven Toolbox binary, release tag, or independent signing key is deployed here as part of this repair.
 
-## Artifact publication
+## Current policy gates
 
-Release executables, installers, archives, and libraries are published as immutable GitHub Release assets. Each indexed release record must identify:
+Tracked Git content is restricted to metadata, release contracts, schemas, CI, bounded Python verification, and project state. ZIP/DLL/EXE binary artifacts belong only in immutable GitHub Releases and are not checked into Git.
 
-- exact `fengie/mhw-mods` source SHA;
-- product version and updater/build number;
-- immutable release tag and channel;
-- UTC publication timestamp (real calendar date and time in ISO 8601 format, seconds required, optional 1–6 fractional digits, literal `Z` suffix; malformed or nonexistent times fail closed);
-- every published artifact filename, byte size, and SHA-256;
-- optional public signing-metadata key identity when independent updater signing is enabled.
+Current [verifier](scripts/verify_release_repo.py) validates MHW schema v1 and rejects unrecognized source repositories, malformed exact SHAs, duplicate identities, invalid timestamps or digests, tracked binary payloads, and mutation/deletion of an existing release index record. Keep this closed by default until the separately reviewed Toolbox v2 release contract is operational.
 
-The source SHA and artifact digest are facts supplied by the verified release pipeline. Agents must not infer, truncate, or fabricate them.
+New Toolbox releases **must not** reuse MHW's `updater-main-*` tag namespace or download paths. Proposed exclusive namespace: `toolbox-v<semver>` and a separate product release-index partition with exact `fengie/heaven-toolbox` source SHA, cryptographically validated artifact evidence and version-to-installed-package identity. Signer secrets and credentials remain outside public Git repositories.
 
-## Append-only provenance
+Before changing the allowlist/schema: add tests that forbid cross-product artifact substitution, MHW archive rewrite, hash mismatch, duplicate Toolbox tags, unverifiable signing metadata, and unintended non-Toolbox publication. Do not treat a metadata key *identifier* as a verified signature. Use a trusted release producer and an independently verifiable consumer/rollback check.
 
-`release-index.json` is append-only after publication. Existing release records may not be changed or removed by an ordinary pull request. If a release is bad, publish a separately identified corrected/superseding release and document the recovery. Do not mutate old provenance so history appears clean.
+## Recovery / handling bad publications
 
-The policy gate compares the proposed index with the target branch and fails if an existing release record is removed or changed.
+Preserve historical release records. On a bad artifact: stop promotion, retain evidence, and issue a separately identified corrected/superseding release with verified identity or approved revocation; do not overwrite immutable artifacts or reassign a tag. Installed-client rollback is a separate transactional operation and must be tested independently.
 
-## Secrets and signing
-
-Only public verification metadata such as a signing key ID/public-key identity may appear here. Private signing keys, GitHub credentials, cookies, HMAC material, API tokens, certificate private keys, recovery secrets, and other credentials remain outside this repository.
-
-## "Latest" state
-
-Any future "latest" pointer must be generated from immutable release records. It is a convenience view, not the authority for artifact identity.
-
-## Recovery boundary
-
-A publication mistake and an installed-client update rollback are different operations:
-
-- **bad publication:** stop promotion, preserve evidence, publish a corrected/superseding immutable release or explicitly revoke according to the signed-metadata design;
-- **client rollback:** restore the client's prior known-good installation under the product updater's transactional rules.
-
-Neither operation authorizes overwriting a previously indexed artifact or source identity in place.
-
-## Verification
-
-Run:
-
-```text
-python scripts/verify_release_repo.py
-```
-
-Pull-request CI additionally runs:
-
-```text
-python scripts/verify_release_repo.py --base-ref origin/<base>
-```
-
-The verifier rejects malformed provenance, non-exact source SHAs, invalid artifact digests, duplicate release identities, tracked MHW product/binary payloads, oversized tracked files, and modification/removal of existing release records.
+**Critical pending work:** actual private Toolbox signed release producer + reviewer authorization + public metadata verifier + a tested installed consumer. Those are blocked and not "green" simply because this repository is public.

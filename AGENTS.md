@@ -1,17 +1,16 @@
-# Agent Instructions — MHW Public Release Repository
+# Agent instructions — Heaven public release archive / future Toolbox channel
 
-This repository is the public **artifact/provenance publication surface** for the MHW Manual Mod Manager. Canonical product source, product planning, updater implementation, tests, and release engineering live in `fengie/mhw-mods`.
+**Canonical repository:** `fengie/heaven-toolbox-release` (renamed from `fengie/mhw-mod-manager-release`; GitHub repository ID 1395549117).
+**This repository currently contains legacy MHW Release assets, not deployed Toolbox binaries.** Treat the existing MHW archive as immutable and ensure older updater clients remain compatible.
 
-Before mutation, refresh current `fengie/heaven-toolbox@main` training and current `fengie/mhw-mods@main` release state. This repository must never become a second product source tree.
+Before writing, refresh `fengie/heaven-toolbox@main` AGENTS/training/Git directive, this repo's current main/index, the active source product and release owners. Public availability never permits leaking private Toolbox source, tokens, signing keys, configuration or CI logs.
 
-## Repository-local invariants
+## Immutable provenance and release boundary
 
-- Tracked Git content is metadata, policy, schemas, CI, and bounded publication tooling only.
-- Release binaries belong in immutable GitHub Release assets, not in the tracked repository tree.
-- Every indexed release must bind an exact 40-character `fengie/mhw-mods` source SHA to a version/build/tag/channel, publication time, and artifact SHA-256/size.
-- Existing indexed release records are append-only. Ordinary changes may add records; they may not silently rewrite or delete published provenance.
-- Private signing keys, release credentials, tokens, and other secrets never enter Git, issue text, logs, or provenance payloads.
-- A bad publication is handled by an explicit superseding/recovery procedure; never normalize silent replacement of an immutable artifact.
-- Run `python scripts/verify_release_repo.py` before delivery. Pull requests must also run append-only verification against their base branch.
+- `release-index.json` schema v1 contains historical MHW records whose literal `source_repository=fengie/mhw-mods` is part of a published historical record. **Do not rewrite those identities to new names** or erase history.
+- Existing `updater-main-*` GitHub Releases and assets refer to MHW. **Never rebrand or replace them with Toolbox artifacts.**
+- Future `toolbox-v*` publication is **blocked until** an independent signer / trusted CI producer and runtime consumption check are implemented, tests pass, and a reviewed new schema/validator explicitly supports product-separated provenance. The current verifier intentionally accepts only historical MHW source identity, and does NOT establish any Toolbox release publication capability.
+- No direct unreviewed release uploads, tag overwrites, secret commits, private source mirroring, or unproven security attestation claims.
+- Track release-configuration work separately from publishing; source merge != artifact publish != installed runtime. Verify main and named consumer compatibility.
 
-See `RELEASE_CONTRACT.md` and `schemas/release-provenance.schema.json`.
+Test `python -m unittest discover -s tests -v` and `python scripts/verify_release_repo.py --base-ref origin/main` on a real exact candidate checkout; CI is the trusted mechanical check. See `RELEASE_CONTRACT.md` and `_AGENT_CONTEXT/PROJECT_PLAN.md`.

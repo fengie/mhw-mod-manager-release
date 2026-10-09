@@ -31,3 +31,13 @@ This file is the repository's durable current-work ledger. It follows the owners
 **Execution-path note:** this ChatGPT session exposes authenticated GitHub but no callable Heaven/Agent Control local-runtime namespace, so local offload was unavailable. Candidate CI is the mechanical verification path.
 
 **Next action:** open the policy PR and require exact-head CI; after that lands, add the producer-side MHW publication adapter under the MHW repository's own release ownership rules.
+
+
+### RELEASE-002 — GitHub rename recovery / separated Toolbox publishing
+
+**Status:** BLOCKED pending independent signed producer and real installed-toolbox verification.  
+**Owner:** unclaimed; carry into trusted Toolbox #666/#763 integration ownership.  
+**Source:** 2026-10-09 canonical repo renames; `fengie/heaven-toolbox-release` retained existing MHW assets and `release-index.json`.  
+**Goal:** protect legacy MHW installed updater links; establish a separate attested `toolbox-v*` signed release channel without leaking Toolbox source.  
+**Acceptance:** exact canonical .heaven identity and current docs, old append-only MHW index unchanged, exact candidate CI green, verified independent Toolbox signer/positive+negative authorization and artifact digest proof, public authenticity checks, installed plugin/consumer identity+rollback acceptance.  
+**Next action:** first merge this metadata repair; then implement trusted Toolbox release-signing adapter and product-separated schema behind independent review, perform real client validation, and only then publish the first Toolbox release. Do **not** assume GitHub rename redirects prove client auto-updater compatibility.
